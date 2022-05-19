@@ -9,12 +9,12 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 contract SimpleToken is ERC20, AccessControl {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-    constructor(address minter, uint256 initialSupply) ERC20 ("SimpleToken", "ST") {
-        _mint(msg.sender, initialSupply);
+    constructor(address minter) ERC20 ("SimpleToken", "ST") {
         _setupRole(MINTER_ROLE, minter);
     }
 
     function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE){
         _mint(to, amount);
+
     }
 }
