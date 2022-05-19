@@ -3,14 +3,18 @@ pragma solidity 0.8.14;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 
 
-contract SimpleToken is ERC20, Ownable {
-    constructor(uint256 initialSupply) ERC20 ("SimpleToken", "ST") {
+contract SimpleToken is ERC20, AccessControl {
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+
+    constructor(address minter, uint256 initialSupply) ERC20 ("SimpleToken", "ST") {
         _mint(msg.sender, initialSupply);
+        _setupRole(MINTER_ROLE, minter);
     }
 
-    function mint(address account, uint256 amount) public onlyOwner {
-        _mint(account, amount);
+    function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE){
+        _mint(to, amount);
     }
 }
