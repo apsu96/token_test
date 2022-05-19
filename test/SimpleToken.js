@@ -5,6 +5,7 @@ const { parseEther } = ethers.utils;
 const INITIAL_SUPPLY = parseEther("1000");
 const TRANSFERRED_AMOUNT = "100";
 const ALLOWANCE_AMOUNT = "123";
+const MINTED_AMOUNT = "12";
 
 describe("Token contract", function() {
   before(async function() {
@@ -42,6 +43,10 @@ describe("Token contract", function() {
 
   it("assigns initial supply to owner", async function() {
     expect(await this.token.balanceOf(this.deployer.address)).to.equal(INITIAL_SUPPLY);
+  });
+
+  it("emits Transfer event", async function () {
+    expect(await this.token).to.emit(this.token, "Transfer").withArgs("0x0000000000000000000000000000000000000000", this.deployer.address, INITIAL_SUPPLY);
   });
 
   describe("Transfer transactions", function() {
@@ -106,6 +111,32 @@ describe("Token contract", function() {
       await expect(this.token.connect(this.stranger).transferFrom(this.deployer.address, this.counterparty.address, ALLOWANCE_AMOUNT)).to.be.reverted;
     });
   });
+
+  describe("Mint transactions", async function () {
+    beforeEach(async function () {
+      this.mintTx = await this.token.mint(this.counterparty.address, MINTED_AMOUNT);
+    });
+
+    it("confirms owner", async function() {
+      expect(await this.token.owner()).to.equal(this.deployer.address);
+    });
+
+    it("emits Transfer event", async function () {
+      await expect(this.mintTx).to.emit(this.token, "Transfer").withArgs("0x0000000000000000000000000000000000000000", this.counterparty.address, MINTED_AMOUNT); 
+    });
+
+    it("increases total amount", async function () {
+      expect(await this.token.totalSupply()).to.equal(INITIAL_SUPPLY.add(MINTED_AMOUNT));
+    });
+
+    it("increases receiver's amount", async function() {
+      expect(await this.token.balanceOf(this.counterparty.address)).to.be.equal(MINTED_AMOUNT);
+    });
+
+    it ("declines access to unauthorised account", async function() {
+      await expect(this.token.connect(this.stranger).mint(this.stranger.address, MINTED_AMOUNT)).to.be.reverted;
+    });
+  })
 
 });
 
